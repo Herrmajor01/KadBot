@@ -1,0 +1,103 @@
+<!DOCTYPE html><html><head>
+		<link rel="stylesheet" type="text/css" href="/Content/Static/Css/pravocaptcha.202505221729.css">
+		<script type="text/javascript" src="/Content/Static/js/pravocaptcha.202505221729.js"></script>
+
+	<style type="text/css">
+		body {
+			background: #f4f7fd;
+		}
+
+		body::before {
+			position: fixed;
+			width: 60px;
+			height: 60px;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: url(/Content/Static/img/t/big-loader.png) no-repeat;
+			background-position-x: 0;
+			content: '';
+			animation: loading 1.2s steps(12, jump-none) infinite;
+		}
+
+		@keyframes loading {
+			0% { background-position-x: 0; }
+			100% { background-position-x: -660px; }
+		}
+	</style>
+</head>
+<body>
+	<form id="tokenFrom" method="post">
+		<input id="token" type="hidden" name="RecaptchaToken" value="">
+	</form>
+	<script>
+		var onSubmit = function (token) {
+				document.getElementById("token").value = token;
+				document.getElementById("tokenFrom").setAttribute("action", window.location.href);
+				document.getElementById("tokenFrom").submit();
+			};
+
+		window.onload = function () {
+			pravocaptcha.removeCloseAbility();
+
+			pravocaptcha.execute(onSubmit);
+		};
+	</script>
+	<script type="x-jquery-tmpl" id="pravocaptcha_template">
+		<div class="b-pravocaptcha js-pravocaptcha">
+	<div class="b-pravocaptcha-row">
+		<div class="b-pravocaptcha-cell">
+			<div class="b-pravocaptcha-window">
+				<h2 class="b-pravocaptcha-title">
+					Подтверждение действия
+				</h2>
+				<div class="b-pravocaptcha-image">
+					<img class="js-pravocaptcha-image">
+					<div class="b-pravocaptcha-image-message">
+						<div class="b-pravocaptcha-image-message-reason">
+							Превышено количество попыток ввода кода
+						</div>
+						<div class="b-pravocaptcha-image-message-consequence">
+							До сброса ~3 минуты
+						</div>
+					</div>
+					<div class="b-preloader-spin js-preloader-spin">
+	<svg class="circular" viewBox="25 25 50 50">
+		<circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="1" stroke-miterlimit="10"></circle>
+	</svg>
+</div>
+
+				</div>
+				<div class="b-pravocaptcha-field js-pravocaptcha-field">
+					<div class="b-pravocaptcha-field-wrapper">
+						<input id="pravocaptcha-input" class="b-pravocaptcha-field-input js-pravocaptcha-input" type="text" autocomplete="off" name="pravocaptcha" />
+						<label for="pravocaptcha-input" class="b-pravocaptcha-field-label">Введите код с картинки</label>
+					</div>
+					<div class="b-pravocaptcha-field-description js-pravocaptcha-description"></div>
+				</div>
+				<div class="b-pravocaptcha-controls g-clearfix">
+					<a href="#" class="b-pravocaptcha-controls-button b-pravocaptcha-controls-button--update js-pravocaptcha-update">
+						Обновить
+					</a>
+					<a href="#" class="b-pravocaptcha-controls-button b-pravocaptcha-controls-button--listen js-pravocaptcha-listen">
+						<div class="b-preloader-spin js-preloader-spin">
+	<svg class="circular" viewBox="25 25 50 50">
+		<circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="1" stroke-miterlimit="10"></circle>
+	</svg>
+</div>
+
+						Прослушать
+					</a>
+					<a href="#" class="b-pravocaptcha-controls-button b-pravocaptcha-controls-button--send js-pravocaptcha-send">
+						Отправить
+					</a>
+				</div>
+				<a href="#" class="b-pravocaptcha-close js-pravocaptcha-close"></a>
+			</div>
+		</div>
+	</div>
+</div>
+	</script>
+
+
+<div class="b-pravocaptcha-modal_wrapper"></div></body></html>
