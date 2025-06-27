@@ -1,3 +1,7 @@
+"""
+Операции с базой данных для KadBot: обработка дел и событий хронологии.
+"""
+
 import sqlite3
 
 DB_PATH = "kad_cases.db"
@@ -44,7 +48,15 @@ def get_last_event(case_number):
         return None
 
 
-def save_event(case_number, event_date, event_title, event_author, event_publish, doc_link, events_count):
+def save_event(
+    case_number,
+    event_date,
+    event_title,
+    event_author,
+    event_publish,
+    doc_link,
+    events_count
+):
     """
     Сохранить событие по делу. Если уже есть — перезаписать.
     """
@@ -55,8 +67,11 @@ def save_event(case_number, event_date, event_title, event_author, event_publish
         (case_number,)
     )
     c.execute(
-        "INSERT INTO chronology (case_number, event_date, event_title, event_author, event_publish, doc_link, events_count) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "INSERT INTO chronology (case_number, event_date, event_title, "
+            "event_author, event_publish, doc_link, events_count) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ),
         (case_number, event_date, event_title, event_author,
          event_publish, doc_link, events_count)
     )

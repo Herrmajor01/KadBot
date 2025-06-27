@@ -1,5 +1,9 @@
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
+"""
+Парсер для получения событий по делу с сайта kad.arbitr.ru с использованием Selenium и undetected_chromedriver.
+"""
+
+import undetected_chromedriver as uc  # type: ignore
+from selenium.webdriver.common.by import By  # type: ignore
 import time
 import random
 

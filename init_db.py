@@ -1,3 +1,5 @@
+"""Этот модуль инициализирует базу данных SQLite и создает необходимые таблицы для KadBot."""
+
 import sqlite3
 
 conn = sqlite3.connect("kad_cases.db")

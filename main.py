@@ -1,5 +1,5 @@
 from logic import main_process_cases
-from crm_sync import sync_crm_projects_to_db
+from crm_sync import sync_crm_projects_to_db  # type: ignore
 
 
 def main():

@@ -1,89 +1,109 @@
+"""
+Модуль для синхронизации списка дел из CRM с локальной базой данных.
+"""
+
 import os
-import requests
+import requests  # type: ignore
 import sqlite3
-from dotenv import load_dotenv
 
-load_dotenv()
-
+DB_PATH = "kad_cases.db"
 API_KEY = os.getenv("ASPRO_API_KEY")
 COMPANY = os.getenv("ASPRO_COMPANY")
-DB_PATH = "kad_cases.db"
+PROJECTS_URL = (
+    f"https://{COMPANY}.aspro.cloud/api/v1/module/st/projects/list"
+)
+PAGE_SIZE = 50
 
 
-def get_projects():
+def get_crm_projects():
     """
-    Получить все проекты из CRM по API Aspro.
-
-    Возвращает список словарей с проектами.
+    Получить список неархивных проектов (дел) из CRM.
     """
-    url = (
-        f"https://{COMPANY}.aspro.cloud/api/v1/module/st/projects/list"
-    )
-    params = {"api_key": API_KEY}
+    headers = {"Authorization": f"Bearer {API_KEY}"}
     projects = []
     page = 1
     while True:
-        params["page"] = page
-        resp = requests.get(url, params=params, timeout=10)
+        params = {
+            "page": page,
+            "perPage": PAGE_SIZE,
+            "archive": 0,
+        }
+        resp = requests.get(PROJECTS_URL, headers=headers,
+                            params=params, timeout=15)
         data = resp.json()
-        if "error" in data:
-            print("Ошибка ответа:", data)
+        if not data.get("data"):
             break
-        items = data.get("response", {}).get("items", [])
-        if not items:
-            break
-        projects.extend(items)
-        total = data.get("response", {}).get("total", 0)
-        if len(projects) >= total:
+        projects.extend(data["data"])
+        if len(data["data"]) < PAGE_SIZE:
             break
         page += 1
     return projects
 
 
-def extract_case_number(name):
+def get_case_numbers_from_db():
     """
-    Извлекает номер дела из названия проекта (А60-12345/2023).
-
-    Возвращает None, если номер не найден.
+    Получить список номеров дел, сохранённых в базе.
     """
-    import re
-    match = re.search(r"[АA]\d{2,}-\d+/\d{4}", name)
-    if match:
-        return match.group(0)
-    return None
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.execute("SELECT case_number FROM cases")
+        return set(row[0] for row in cur.fetchall())
 
 
 def add_case_to_db(case_number):
     """
-    Добавляет номер дела в таблицу cases, если такого ещё нет.
+    Добавить дело в базу, если его ещё нет.
     """
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(
-        "INSERT OR IGNORE INTO cases (case_number) VALUES (?)",
-        (case_number,),
+    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            conn.execute(
+                "INSERT INTO cases (case_number) VALUES (?)",
+                (case_number,)
+            )
+        except sqlite3.IntegrityError:
+            pass  # Уже есть
+
+
+def delete_case_from_db(case_number):
+    """
+    Удалить дело из базы.
+    """
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "DELETE FROM cases WHERE case_number = ?",
+            (case_number,)
+        )
+
+
+def sync_cases_with_crm():
+    """
+    Синхронизировать список дел из CRM с базой.
+
+    Добавлять новые, удалять архивные.
+    """
+    print("Получаем список проектов из CRM...")
+    crm_projects = get_crm_projects()
+    crm_case_numbers = set()
+
+    for prj in crm_projects:
+        # Здесь предположим, что номер дела хранится в поле "number"
+        number = prj.get("number") or ""
+        number = number.strip()
+        if number:
+            crm_case_numbers.add(number)
+            add_case_to_db(number)
+
+    db_case_numbers = get_case_numbers_from_db()
+
+    # Удаление дел, которых нет в CRM
+    for old_case in db_case_numbers - crm_case_numbers:
+        delete_case_from_db(old_case)
+        print(f"Дело № {old_case} удалено из базы (оно в архиве CRM).")
+
+    print(
+        f"Итого: {len(
+            crm_case_numbers)} активных дел в базе синхронизировано с CRM."
     )
-    conn.commit()
-    conn.close()
-
-
-def sync_crm_projects_to_db():
-    """
-    Синхронизирует проекты из CRM с базой: добавляет новые номера дел.
-    """
-    projects = get_projects()
-    count = 0
-    for proj in projects:
-        name = proj.get("name", "")
-        case_number = extract_case_number(name)
-        if not case_number:
-            print(f"Не найден номер в проекте: {name}")
-            continue
-        add_case_to_db(case_number)
-        print(f"Добавлено дело: {case_number}")
-        count += 1
-    print(f"Итого добавлено {count} дел")
 
 
 if __name__ == "__main__":
-    sync_crm_projects_to_db()
+    sync_cases_with_crm()
