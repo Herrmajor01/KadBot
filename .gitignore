@@ -1,3 +1,24 @@
 venv/
 .env
+__pycache__/
+*.py[cod]
+*.so
+
+# SQLite database
+*.db
+
+# Logs
+*.log
+
+# macOS system files
+.DS_Store
+
+# VSCode project settings (если используешь VSCode)
+.vscode/
+
+# Файлы тестовых шаблонов/результатов, если они не нужны
+kad_case.html
+
+# Личное/debug
+debug/
 
