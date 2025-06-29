@@ -1,5 +1,12 @@
+# Web scraping and browser automation
 undetected-chromedriver==3.5.5
 selenium==4.21.0
-python-dotenv==1.0.1
+
+# HTTP requests
 requests==2.32.3
-sqlalchemy
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Database ORM
+SQLAlchemy==2.0.23

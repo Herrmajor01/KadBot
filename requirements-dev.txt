@@ -1,0 +1,28 @@
+# Development dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Code formatting and linting
+black==23.12.1
+flake8==7.0.0
+isort==5.13.2
+pylint==3.0.3
+
+# Type checking
+mypy==1.7.1
+types-requests==2.31.0.20231231
+
+# Testing
+pytest==7.4.4
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+
+# Pre-commit hooks
+pre-commit==3.6.0
+
+# Jupyter notebooks (for development)
+jupyter==1.0.0
+ipython==8.18.1
