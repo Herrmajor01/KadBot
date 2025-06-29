@@ -373,22 +373,6 @@ pre-commit install
 - **Типизация**: mypy
 - **Докстринги**: Google style на русском языке
 
-## 📄 Лицензия
-
-Этот проект распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
-
-## 📞 Поддержка
-
-- **Issues**: [GitHub Issues](https://github.com/your-username/KadBot/issues)
-- **Email**: your.email@example.com
-- **Telegram**: @your_username
-
-## 🙏 Благодарности
-
-- [undetected-chromedriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver) - для обхода блокировок
-- [SQLAlchemy](https://www.sqlalchemy.org/) - для работы с БД
-- [Aspro.Cloud](https://aspro.cloud/) - за API
-
 ---
 
 **KadBot** — автоматизация мониторинга арбитражных дел 🏛️
