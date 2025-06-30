@@ -26,3 +26,5 @@ pre-commit==3.6.0
 # Jupyter notebooks (for development)
 jupyter==1.0.0
 ipython==8.18.1
+
+pdf2image=1.17.0

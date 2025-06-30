@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kadbot"
 version = "1.0.0"
-description = "Парсер дел с сайта kad.arbitr.ru с интеграцией в Aspro CRM"
+description = "Парсер дел с сайта kad.arbitr.ru с интеграцией в Aspro CRM и скачиванием документов"
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
@@ -28,6 +28,11 @@ dependencies = [
     "requests>=2.32.3",
     "python-dotenv>=1.0.1",
     "SQLAlchemy>=2.0.23",
+    "pdf2image>=1.17.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.1.0",
+    "tqdm>=4.66.1",
+    "pyautogui>=0.9.54",
 ]
 
 [project.optional-dependencies]

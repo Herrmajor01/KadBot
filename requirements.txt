@@ -10,3 +10,14 @@ python-dotenv==1.0.1
 
 # Database ORM
 SQLAlchemy==2.0.23
+
+# Document processing and OCR
+pdf2image==1.17.0
+pytesseract==0.3.10
+Pillow==10.1.0
+
+# Progress bars
+tqdm==4.66.1
+
+# GUI automation (for document downloads)
+pyautogui==0.9.54
