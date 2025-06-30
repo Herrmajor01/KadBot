@@ -198,6 +198,49 @@ kad_parser.log
 debug/
 *.html
 error_*.html
+
+# Documents and OCR
+documents/
+*.pdf
+*.txt
+*.jpg
+*.jpeg
+*.png
+*.tiff
+*.bmp
+
+# Progress files
+*_progress.json
+parser_progress.json
+download_progress.json
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
 kad_case.html
 
 # Chrome driver files

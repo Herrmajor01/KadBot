@@ -25,7 +25,7 @@ clean: ## Очистить временные файлы
 	rm -rf .coverage
 
 lint: ## Проверить код с помощью линтеров
-	flake8 *.py --max-line-length=79
+	flake8 *.py --max-line-length=79 --extend-ignore=F401
 	pylint *.py --disable=C0114,C0116
 
 format: ## Отформатировать код
@@ -49,6 +49,9 @@ sync-crm: ## Синхронизировать проекты из CRM
 
 parse-cases: ## Запустить парсинг дел
 	python -c "from parser import sync_chronology; sync_chronology()"
+
+download-docs: ## Скачать документы по ссылкам из базы данных
+	python -c "from download_documents import download_documents; download_documents()"
 
 test-notify: ## Отправить тестовое уведомление
 	python test_notify.py
