@@ -6,7 +6,7 @@ from db import engine
 from models import Base
 
 
-def init_db():
+def init_db() -> None:
     """
     Создает все таблицы в базе данных на основе метаданных моделей.
 

@@ -8,8 +8,9 @@ import re
 from typing import Any, Dict, List, Optional
 
 import requests  # type: ignore
-from db import Session
 from dotenv import load_dotenv  # type: ignore
+
+from db import Session
 from models import Cases
 
 logging.basicConfig(

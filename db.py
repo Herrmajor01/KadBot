@@ -4,9 +4,10 @@
 """
 from typing import Optional
 
-from models import Cases
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import sessionmaker  # type: ignore
+
+from models import Cases
 
 DB_PATH = "sqlite:///kad_cases.db"
 
