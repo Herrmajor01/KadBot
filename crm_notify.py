@@ -1,6 +1,7 @@
 """
 Модуль для отправки уведомлений в Aspro CRM через API.
 """
+
 import logging
 import os
 from typing import Optional
@@ -11,7 +12,7 @@ from dotenv import load_dotenv  # type: ignore
 logging.basicConfig(
     filename="kad_parser.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 load_dotenv()
@@ -27,7 +28,7 @@ def send_case_update_comment(
     project_id: int,
     event_title: str,
     event_date: str,
-    doc_link: Optional[str] = None
+    doc_link: Optional[str] = None,
 ) -> Optional[dict]:
     """
     Отправляет комментарий-уведомление об обновлении события по делу в проект
@@ -62,13 +63,13 @@ def send_case_update_comment(
 
     comment_text = (
         f"<p>Обновление по делу<br>"
-        f"Уведомление для: <span class=\"js-item-mention "
-        f"mentioning__user flw--comment-mention\" "
-        f"data-id=\"{USERID}\" data-user-detail=\"\" "
-        f"data-user-id=\"{USERID}\" "
-        f"data-href=\"/_module/company/view/member/{USERID}\" "
-        f"data-toggle=\"sidepanel\" "
-        f"_target=\"blank\" contenteditable=\"false\">{USER_NAME}</span><br>"
+        f'Уведомление для: <span class="js-item-mention '
+        f'mentioning__user flw--comment-mention" '
+        f'data-id="{USERID}" data-user-detail="" '
+        f'data-user-id="{USERID}" '
+        f'data-href="/_module/company/view/member/{USERID}" '
+        f'data-toggle="sidepanel" '
+        f'_target="blank" contenteditable="false">{USER_NAME}</span><br>'
         f"Событие: <b>{event_title}</b><br>"
         f"Дата: {event_date}<br>"
         f"<a href='{doc_link if doc_link else '#'}'>Документ</a></p>"

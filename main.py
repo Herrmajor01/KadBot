@@ -3,6 +3,7 @@
 Предоставляет интерфейс для выбора действий: синхронизация CRM, парсинг или
 скачивание документов.
 """
+
 import json
 import os
 from parser import sync_chronology  # type: ignore
@@ -29,7 +30,8 @@ def check_resume_option(filename: str) -> bool:
             progress = json.load(f)
         last_case_number = progress.get("last_case_number", "неизвестно")
         process_name = (
-            "парсинга" if filename == "parser_progress.json"
+            "парсинга"
+            if filename == "parser_progress.json"
             else "скачивания документов"
         )
         print(
@@ -54,9 +56,7 @@ def main() -> None:
     print("1. Синхронизировать CRM проекты")
     print("2. Парсить события по делам")
     print("3. Скачать документы по ссылкам из базы данных")
-    action = input(
-        "Выбери действие (1, 2 или 3): "
-    ).strip()
+    action = input("Выбери действие (1, 2 или 3): ").strip()
 
     if action == "1":
         sync_crm_projects_to_db()

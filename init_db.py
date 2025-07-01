@@ -2,6 +2,7 @@
 Модуль для инициализации базы данных.
 Создает все таблицы на основе моделей SQLAlchemy.
 """
+
 from db import engine
 from models import Base
 

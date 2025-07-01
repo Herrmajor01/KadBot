@@ -2,6 +2,7 @@
 Модели SQLAlchemy для работы с базой данных.
 Определяет структуру таблиц для дел и хронологии событий.
 """
+
 from sqlalchemy import Column, Integer, String  # type: ignore
 from sqlalchemy.ext.declarative import declarative_base  # type: ignore
 
@@ -14,6 +15,7 @@ class Cases(Base):
 
     Связывает номера дел с ID проектов в CRM системе.
     """
+
     __tablename__ = "cases"
     id = Column(Integer, primary_key=True)
     case_number = Column(String, unique=True, nullable=False)
@@ -26,6 +28,7 @@ class Chronology(Base):
 
     Содержит информацию о событиях, датах, авторах и ссылках на документы.
     """
+
     __tablename__ = "chronology"
     id = Column(Integer, primary_key=True)
     case_number = Column(String, nullable=False)

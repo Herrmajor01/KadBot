@@ -1,6 +1,7 @@
 """
 Утилитный модуль с общими функциями для парсинга и скачивания документов.
 """
+
 import json
 import logging
 import os
@@ -12,7 +13,7 @@ from typing import Any, Dict, Optional
 try:
     import undetected_chromedriver as uc  # type: ignore
     from selenium.webdriver.common.by import By  # type: ignore
-    from selenium.webdriver.support import (  # type: ignore
+    from selenium.webdriver.support import (
         expected_conditions as EC,  # type: ignore
     )
     from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
@@ -47,8 +48,8 @@ def save_progress(case_number: str, index: int, filename: str) -> None:
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(progress, f, ensure_ascii=False)
     logging.info(
-        f"Прогресс сохранён в {filename}: {case_number}, "
-        f"индекс {index}")
+        f"Прогресс сохранён в {filename}: {case_number}, " f"индекс {index}"
+    )
 
 
 def load_progress(filename: str) -> Optional[Dict[str, Any]]:
@@ -101,14 +102,14 @@ def get_driver(retries: int = 3, timeout: int = 30) -> Optional[uc.Chrome]:
         Exception: Если не удалось инициализировать драйвер после всех попыток
     """
     options = uc.ChromeOptions()
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('--disable-infobars')
-    options.add_argument('--lang=ru-RU')
-    options.add_argument('--window-size=1280,900')
-    options.add_argument(f'--user-agent={random.choice(USER_AGENTS)}')
-    options.add_argument('--disable-web-security')
-    options.add_argument('--disable-site-isolation-trials')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--lang=ru-RU")
+    options.add_argument("--window-size=1280,900")
+    options.add_argument(f"--user-agent={random.choice(USER_AGENTS)}")
+    options.add_argument("--disable-web-security")
+    options.add_argument("--disable-site-isolation-trials")
 
     socket.setdefaulttimeout(timeout)
 
@@ -122,7 +123,8 @@ def get_driver(retries: int = 3, timeout: int = 30) -> Optional[uc.Chrome]:
             logging.info("Chrome драйвер успешно инициализирован")
             driver.get("https://kad.arbitr.ru")
             WebDriverWait(driver, timeout).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body")))
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
             logging.info("Страница kad.arbitr.ru прогружена")
             return driver
         except Exception as e:
@@ -143,7 +145,8 @@ def simulate_mouse_movement(driver: uc.Chrome) -> None:
         driver: Chrome драйвер для выполнения JavaScript
     """
     try:
-        driver.execute_script("""
+        driver.execute_script(
+            """
             function moveMouse(x, y) {
                 const event = new MouseEvent('mousemove', {
                     clientX: x,
@@ -153,7 +156,8 @@ def simulate_mouse_movement(driver: uc.Chrome) -> None:
                 document.dispatchEvent(event);
             }
             moveMouse(Math.random() * 1200, Math.random() * 800);
-        """)
+        """
+        )
         time.sleep(random.uniform(0.1, 0.3))
     except Exception as e:
         logging.info(f"Ошибка эмуляции движения мыши: {e}")

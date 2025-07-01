@@ -3,6 +3,7 @@
 Содержит функции для парсинга событий дел
  и синхронизации хронологии с базой данных.
 """
+
 import logging
 import random
 import time
@@ -39,7 +40,7 @@ from utils import (
 logging.basicConfig(
     filename="kad_parser.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 
@@ -60,8 +61,7 @@ def parse_date(date_str: str) -> Optional[datetime]:
 
 
 def get_case_events(
-    driver: uc.Chrome,
-    case_number: str
+    driver: uc.Chrome, case_number: str
 ) -> Tuple[Optional[Dict[str, Any]], int]:
     """
     Получает события для конкретного дела с сайта kad.arbitr.ru.
@@ -86,7 +86,7 @@ def get_case_events(
                 with open(
                     f"error_{case_number.replace('/', '_')}.html",
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
                 return None, 0
@@ -95,11 +95,12 @@ def get_case_events(
             if "Вы можете оформить подписку на 40 дел" in driver.page_source:
                 logging.warning(
                     f"Доступ к хронологии ограничен из-за подписки для дела "
-                    f"{case_number}")
+                    f"{case_number}"
+                )
                 with open(
                     f"error_{case_number.replace('/', '_')}.html",
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
                 return {
@@ -107,7 +108,7 @@ def get_case_events(
                     "event_title": "Доступ ограничен (подписка)",
                     "event_author": "",
                     "event_publish": "",
-                    "doc_link": ""
+                    "doc_link": "",
                 }, 0
 
             # Эмуляция человеческого поведения (уменьшено до 3 прокруток)
@@ -123,7 +124,8 @@ def get_case_events(
             try:
                 tabs = WebDriverWait(driver, 8).until(
                     EC.presence_of_all_elements_located(
-                        (By.CSS_SELECTOR, ".b-tab.js-tab"))
+                        (By.CSS_SELECTOR, ".b-tab.js-tab")
+                    )
                 )
                 for tab in tabs:
                     if "Судебные акты" in tab.text:
@@ -131,32 +133,37 @@ def get_case_events(
                         time.sleep(random.uniform(1.0, 2.0))
                         logging.info(
                             f"Переключено на вкладку 'Судебные акты' для дела "
-                            f"{case_number}")
+                            f"{case_number}"
+                        )
                         break
             except Exception as e:
                 logging.info(
                     f"Не удалось переключиться на вкладку 'Судебные акты' "
-                    f"для дела {case_number}: {e}")
+                    f"для дела {case_number}: {e}"
+                )
 
             # Ожидание и клик по кнопке раскрытия хронологии
             try:
                 collapse_btn = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable(
-                        (By.CSS_SELECTOR, ".b-collapse.js-collapse"))
+                        (By.CSS_SELECTOR, ".b-collapse.js-collapse")
+                    )
                 )
                 driver.execute_script(
-                    "arguments[0].scrollIntoView(true);", collapse_btn)
+                    "arguments[0].scrollIntoView(true);", collapse_btn
+                )
                 driver.execute_script("arguments[0].click();", collapse_btn)
                 time.sleep(random.uniform(1.0, 2.0))
                 logging.info(f"Раскрыта хронология для дела {case_number}")
             except TimeoutException:
                 logging.warning(
                     f"Кнопка раскрытия хронологии (.b-collapse.js-collapse) "
-                    f"не найдена для дела {case_number} после 10 секунд")
+                    f"не найдена для дела {case_number} после 10 секунд"
+                )
                 with open(
                     f"error_{case_number.replace('/', '_')}.html",
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
                 return None, 0
@@ -168,7 +175,7 @@ def get_case_events(
                 with open(
                     f"error_{case_number.replace('/', '_')}.html",
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
                 return None, 0
@@ -177,7 +184,8 @@ def get_case_events(
             try:
                 elements = WebDriverWait(driver, 20).until(
                     EC.presence_of_all_elements_located(
-                        (By.CSS_SELECTOR, ".b-chrono-item.js-chrono-item"))
+                        (By.CSS_SELECTOR, ".b-chrono-item.js-chrono-item")
+                    )
                 )
             except TimeoutException:
                 logging.warning(
@@ -187,7 +195,7 @@ def get_case_events(
                 with open(
                     f"error_{case_number.replace('/', '_')}.html",
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
                 return None, 0
@@ -213,10 +221,10 @@ def get_case_events(
                 "event_date": safe_sel(last_event, ".case-date"),
                 "event_title": safe_sel(last_event, ".case-type"),
                 "event_author": safe_sel(last_event, ".case-subject"),
-                "event_publish": safe_sel(
-                    last_event, ".b-case-publish_info"
-                ).replace("Дата публикации:", "").strip(),
-                "doc_link": doc_link
+                "event_publish": safe_sel(last_event, ".b-case-publish_info")
+                .replace("Дата публикации:", "")
+                .strip(),
+                "doc_link": doc_link,
             }
             logging.info(
                 f"Спарсено событие для дела {case_number}: "
@@ -232,7 +240,7 @@ def get_case_events(
             with open(
                 f"error_{case_number.replace('/', '_')}.html",
                 "w",
-                encoding="utf-8"
+                encoding="utf-8",
             ) as f:
                 f.write(driver.page_source)
             if attempt < 2:
@@ -250,7 +258,7 @@ def get_case_events(
 def sync_chronology(
     batch_size: int = 50,
     pause_between_batches: int = 120,
-    resume: bool = False
+    resume: bool = False,
 ) -> None:
     """
     Синхронизирует хронологию дел с сайта kad.arbitr.ru с базой данных.
@@ -280,7 +288,8 @@ def sync_chronology(
                 start_index = progress.get("last_index", 0)
                 logging.info(
                     f"Возобновление с дела {last_case_number} "
-                    f"(индекс {start_index})")
+                    f"(индекс {start_index})"
+                )
                 cases = cases[start_index:]
             else:
                 logging.info("Файл прогресса не найден, начинаем с начала")
@@ -291,18 +300,21 @@ def sync_chronology(
 
         with tqdm(total=len(cases), desc="Обработка дел", unit="дело") as pbar:
             for i in range(0, len(cases), batch_size):
-                batch = cases[i:i + batch_size]
+                batch = cases[i: i + batch_size]
                 logging.info(
                     f"Обработка пакета дел {i+1+start_index}-"
                     f"{min(i+batch_size+start_index, len(cases)+start_index)} "
                     f"из {len(cases)+start_index}"
                 )
-                for index, case in enumerate(batch, start=i+start_index):
+                for index, case in enumerate(batch, start=i + start_index):
                     case_number = case.case_number
                     try:
-                        db_event = session.query(Chronology).filter_by(
-                            case_number=case_number
-                        ).order_by(Chronology.id.desc()).first()
+                        db_event = (
+                            session.query(Chronology)
+                            .filter_by(case_number=case_number)
+                            .order_by(Chronology.id.desc())
+                            .first()
+                        )
                         web_event, events_count = get_case_events(
                             driver, case_number
                         )
@@ -316,15 +328,17 @@ def sync_chronology(
 
                         new_date = parse_date(web_event["event_date"])
                         if not db_event:
-                            session.add(Chronology(
-                                case_number=case_number,
-                                event_date=web_event["event_date"],
-                                event_title=web_event["event_title"],
-                                event_author=web_event["event_author"],
-                                event_publish=web_event["event_publish"],
-                                events_count=events_count,
-                                doc_link=web_event["doc_link"]
-                            ))
+                            session.add(
+                                Chronology(
+                                    case_number=case_number,
+                                    event_date=web_event["event_date"],
+                                    event_title=web_event["event_title"],
+                                    event_author=web_event["event_author"],
+                                    event_publish=web_event["event_publish"],
+                                    events_count=events_count,
+                                    doc_link=web_event["doc_link"],
+                                )
+                            )
                             session.commit()
                             logging.info(
                                 "Добавлено новое событие для дела "
@@ -336,14 +350,14 @@ def sync_chronology(
                             if new_date and (
                                 not old_date or new_date > old_date
                             ):
-                                db_event.event_date = web_event[
-                                    "event_date"]
-                                db_event.event_title = web_event[
-                                    "event_title"]
+                                db_event.event_date = web_event["event_date"]
+                                db_event.event_title = web_event["event_title"]
                                 db_event.event_author = web_event[
-                                    "event_author"]
+                                    "event_author"
+                                ]
                                 db_event.event_publish = web_event[
-                                    "event_publish"]
+                                    "event_publish"
+                                ]
                                 db_event.events_count = events_count
                                 db_event.doc_link = web_event["doc_link"]
                                 session.commit()
@@ -359,12 +373,14 @@ def sync_chronology(
                                     f"Без изменений для дела {case_number}"
                                 )
                         processed_cases += 1
-                        save_progress(case_number, index,
-                                      "parser_progress.json")
+                        save_progress(
+                            case_number, index, "parser_progress.json"
+                        )
                         pbar.update(1)
                     except Exception as e:
                         logging.error(
-                            f"Ошибка обработки дела {case_number}: {e}")
+                            f"Ошибка обработки дела {case_number}: {e}"
+                        )
                         pbar.update(1)
                         continue
                 if i + batch_size < len(cases):
@@ -406,7 +422,7 @@ def notify_case_update(case_number: str, event_data: Dict[str, Any]) -> None:
             project_id=project_id,
             event_title=event_data.get("event_title", "Без названия"),
             event_date=event_data.get("event_date", "Не указана"),
-            doc_link=event_data.get("doc_link")
+            doc_link=event_data.get("doc_link"),
         )
         logging.info(
             f"Комментарий успешно отправлен в CRM для дела {case_number}"

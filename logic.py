@@ -2,6 +2,7 @@
 Модуль с основной логикой парсинга и обработки дел.
 Содержит функции для работы с базой данных и парсинга событий.
 """
+
 import logging
 import random
 import time
@@ -16,7 +17,7 @@ from models import Cases, Chronology
 logging.basicConfig(
     filename="kad_parser.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 
@@ -47,16 +48,16 @@ def get_last_event_from_db(session, case_number: str) -> Optional[Chronology]:
     Returns:
         Chronology: Последнее событие или None, если событий нет
     """
-    return session.query(Chronology).filter_by(
-        case_number=case_number
-    ).order_by(Chronology.id.desc()).first()
+    return (
+        session.query(Chronology)
+        .filter_by(case_number=case_number)
+        .order_by(Chronology.id.desc())
+        .first()
+    )
 
 
 def save_event_to_db(
-    session,
-    case_number: str,
-    event_data: Dict[str, Any],
-    events_count: int
+    session, case_number: str, event_data: Dict[str, Any], events_count: int
 ) -> None:
     """
     Сохраняет новое событие в базу данных.
@@ -74,7 +75,7 @@ def save_event_to_db(
         event_author=event_data.get("event_author", ""),
         event_publish=event_data.get("event_publish", ""),
         doc_link=event_data.get("doc_link", ""),
-        events_count=events_count
+        events_count=events_count,
     )
     session.add(chronology)
     session.commit()
@@ -88,7 +89,7 @@ def update_event_in_db(
     session,
     chronology: Chronology,
     event_data: Dict[str, Any],
-    events_count: int
+    events_count: int,
 ) -> None:
     """
     Обновляет существующее событие в базе данных.
@@ -185,5 +186,5 @@ def notify_case_update(case_number: str, event_data: Dict[str, Any]) -> None:
         project_id=project_id,
         event_title=event_data.get("event_title", "Без названия"),
         event_date=event_data.get("event_date", "Не указана"),
-        doc_link=event_data.get("doc_link")
+        doc_link=event_data.get("doc_link"),
     )

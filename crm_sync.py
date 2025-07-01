@@ -2,6 +2,7 @@
 Модуль для синхронизации проектов из Aspro CRM с базой данных.
 Извлекает номера дел из названий проектов и обновляет базу данных.
 """
+
 import logging
 import os
 import re
@@ -16,7 +17,7 @@ from models import Cases
 logging.basicConfig(
     filename="kad_parser.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 load_dotenv()
@@ -109,9 +110,11 @@ def sync_crm_projects_to_db() -> None:
 
         for case_number in db_case_numbers:
             if case_number not in active_case_numbers:
-                obj = session.query(Cases).filter_by(
-                    case_number=case_number
-                ).first()
+                obj = (
+                    session.query(Cases)
+                    .filter_by(case_number=case_number)
+                    .first()
+                )
                 if obj:
                     session.delete(obj)
                     logging.info(f"Удалено архивное дело: {case_number}")

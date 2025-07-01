@@ -3,6 +3,7 @@
 пользователя. Использует переменные окружения для авторизации и
 настройки.
 """
+
 import logging
 import os
 from typing import Optional
@@ -13,7 +14,7 @@ from dotenv import load_dotenv  # type: ignore
 logging.basicConfig(
     filename="kad_parser.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 load_dotenv()
@@ -31,7 +32,7 @@ def send_test_comment(
     entity_id: int,
     event_title: str,
     event_date: str,
-    doc_link: Optional[str] = None
+    doc_link: Optional[str] = None,
 ) -> Optional[dict]:
     """
     Отправляет тестовый комментарий в проект Aspro CRM с упоминанием
@@ -66,13 +67,13 @@ def send_test_comment(
 
     comment_text = (
         f"<p>Тестовое уведомление<br>"
-        f"Уведомление для: <span class=\"js-item-mention "
-        f"mentioning__user flw--comment-mention\" "
-        f"data-id=\"{USERID}\" data-user-detail=\"\" "
-        f"data-user-id=\"{USERID}\" "
-        f"data-href=\"/_module/company/view/member/{USERID}\" "
-        f"data-toggle=\"sidepanel\" "
-        f"_target=\"blank\" contenteditable=\"false\">{USER_NAME}</span><br>"
+        f'Уведомление для: <span class="js-item-mention '
+        f'mentioning__user flw--comment-mention" '
+        f'data-id="{USERID}" data-user-detail="" '
+        f'data-user-id="{USERID}" '
+        f'data-href="/_module/company/view/member/{USERID}" '
+        f'data-toggle="sidepanel" '
+        f'_target="blank" contenteditable="false">{USER_NAME}</span><br>'
         f"Событие: <b>{event_title}</b><br>"
         f"Дата: {event_date}<br>"
         f"<a href='{doc_link if doc_link else '#'}'>Документ</a></p>"
@@ -115,5 +116,5 @@ if __name__ == "__main__":
         entity_id=177,
         event_title="Тестовое событие",
         event_date="28.06.2025",
-        doc_link="https://kad.arbitr.ru/test-document"
+        doc_link="https://kad.arbitr.ru/test-document",
     )

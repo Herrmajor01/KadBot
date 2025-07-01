@@ -2,6 +2,7 @@
 Модуль для работы с базой данных SQLAlchemy.
 Содержит настройки подключения и функции для работы с данными.
 """
+
 from typing import Optional
 
 from sqlalchemy import create_engine  # type: ignore
@@ -11,7 +12,7 @@ from models import Cases
 
 DB_PATH = "sqlite:///kad_cases.db"
 
-engine = create_engine(DB_PATH, connect_args={'check_same_thread': False})
+engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
 Session = sessionmaker(bind=engine)
 
 
