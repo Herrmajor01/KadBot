@@ -17,6 +17,7 @@ try:
         expected_conditions as EC,  # type: ignore
     )
     from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
+    from webdriver_manager.chrome import ChromeDriverManager
 except ImportError as e:
     raise ImportError(f"Required modules are missing: {e}")
 
@@ -101,16 +102,6 @@ def get_driver(retries: int = 3, timeout: int = 30) -> Optional[uc.Chrome]:
     Raises:
         Exception: Если не удалось инициализировать драйвер после всех попыток
     """
-    options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--lang=ru-RU")
-    options.add_argument("--window-size=1280,900")
-    options.add_argument(f"--user-agent={random.choice(USER_AGENTS)}")
-    options.add_argument("--disable-web-security")
-    options.add_argument("--disable-site-isolation-trials")
-
     socket.setdefaulttimeout(timeout)
 
     for attempt in range(retries):
@@ -119,7 +110,29 @@ def get_driver(retries: int = 3, timeout: int = 30) -> Optional[uc.Chrome]:
                 f"Попытка инициализации Chrome драйвера "
                 f"({attempt + 1}/{retries})"
             )
-            driver = uc.Chrome(options=options, use_subprocess=True)
+
+            # Создаем новый объект options для каждой
+            # попытки
+            options = uc.ChromeOptions()
+            options.add_argument("--no-sandbox")
+            options.add_argument(
+                "--disable-blink-features=AutomationControlled"
+            )
+            options.add_argument("--disable-infobars")
+            options.add_argument("--lang=ru-RU")
+            options.add_argument("--window-size=1280,900")
+            options.add_argument(f"--user-agent={random.choice(USER_AGENTS)}")
+            options.add_argument("--disable-web-security")
+            options.add_argument("--disable-site-isolation-trials")
+
+            # Используем webdriver-manager для автоматического
+            # управления ChromeDriver
+            driver_path = ChromeDriverManager().install()
+            driver = uc.Chrome(
+                driver_executable_path=driver_path,
+                options=options,
+                use_subprocess=True
+            )
             logging.info("Chrome драйвер успешно инициализирован")
             driver.get("https://kad.arbitr.ru")
             WebDriverWait(driver, timeout).until(
