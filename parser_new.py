@@ -111,93 +111,47 @@ def get_case_events(
             driver.execute_script("window.scrollTo(0, 0);")
             time.sleep(random.uniform(0.5, 1.0))
 
-            # Извлекаем блок "Следующее заседание" по HTML-структуре
+            # Извлекаем блок "Следующее заседание: DD.MM.YYYY, HH:MM , к.NNN"
             hearing_date = ""
             hearing_time = ""
             hearing_room = ""
             try:
-                # Ищем div с классом b-instanceAdditional, который содержит
-                # информацию о заседании
-                hearing_blocks = driver.find_elements(
-                    By.CSS_SELECTOR, "div.b-instanceAdditional"
+                # По иконке красного календаря
+                red_icons = driver.find_elements(
+                    By.CSS_SELECTOR, "i.b-icons16.redCalendar"
                 )
-
-                for block in hearing_blocks:
-                    # Проверяем, содержит ли блок иконку календаря
-                    calendar_icons = block.find_elements(
-                        By.CSS_SELECTOR, "i.b-icons16.redCalendar"
-                    )
-
-                    if calendar_icons:
-                        # Нашли блок с информацией о заседании
-                        text_content = block.text.strip()
-                        logging.info(
-                            f"Найден блок заседания для {case_number}: "
-                            f"{text_content}"
-                        )
-
-                        # Ищем дату и время в формате DD.MM.YYYY, HH:MM
-                        date_time_match = re.search(
-                            r"(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2})",
-                            text_content
-                        )
-
-                        if date_time_match:
-                            hearing_date = date_time_match.group(1)
-                            hearing_time = date_time_match.group(2)
-
-                            # Ищем номер кабинета/зала
-                            room_match = re.search(r"к\.(\d+)", text_content)
-                            if room_match:
-                                hearing_room = room_match.group(1)
-                            else:
-                                # Ищем другие варианты обозначения зала
-                                room_match = re.search(
-                                    r"Зал[^№]*№\s*(\d+)",
-                                    text_content
-                                )
-                                if room_match:
-                                    hearing_room = room_match.group(1)
-                                else:
-                                    hearing_room = ""
-
-                            logging.info(
-                                "Найдено следующее заседание: %s %s %s",
-                                hearing_date,
-                                hearing_time,
-                                hearing_room,
-                            )
-                            break
-
-                # Если не нашли по структуре, пробуем резервный поиск по тексту
-                if not hearing_date or not hearing_time:
-                    logging.info(
-                        f"Резервный поиск по тексту для дела {case_number}"
-                    )
+                text_source = ""
+                if red_icons:
+                    # Берём ближайший родитель с текстом
+                    container = red_icons[0].find_element(By.XPATH, "./..")
+                    text_source = container.text.strip()
+                if not text_source:
+                    # Резервный поиск по тексту
                     elems = driver.find_elements(
                         By.XPATH,
                         "//*[contains(text(),'Следующее заседание')]",
                     )
                     if elems:
                         text_source = elems[0].text.strip()
-                        m = re.search(
-                            (
-                                r"Следующее заседание:\s*(\d{2}\.\d{2}\.\d{4}),"
-                                r"\s*(\d{2}:\d{2})(?:\s*,\s*к\.(\d+))?"
-                            ),
-                            text_source,
+
+                if text_source:
+                    m = re.search(
+                        (
+                            r"Следующее заседание:\s*(\d{2}\.\d{2}\.\d{4}),"
+                            r"\s*(\d{2}:\d{2})(?:\s*,\s*к\.(\d+))?"
+                        ),
+                        text_source,
+                    )
+                    if m:
+                        hearing_date = m.group(1)
+                        hearing_time = m.group(2)
+                        hearing_room = m.group(3) if m.group(3) else ""
+                        logging.info(
+                            "Найдено следующее заседание: %s %s %s",
+                            hearing_date,
+                            hearing_time,
+                            hearing_room,
                         )
-                        if m:
-                            hearing_date = m.group(1)
-                            hearing_time = m.group(2)
-                            hearing_room = m.group(3) if m.group(3) else ""
-                            logging.info(
-                                "Найдено следующее заседание (резервный поиск): "
-                                "%s %s %s",
-                                hearing_date,
-                                hearing_time,
-                                hearing_room,
-                            )
             except Exception as e:
                 logging.info(
                     "Не удалось извлечь 'Следующее заседание' для %s: %s",

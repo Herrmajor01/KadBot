@@ -38,3 +38,9 @@ class Chronology(Base):
     event_publish = Column(String)
     events_count = Column(Integer)
     doc_link = Column(String)
+    # Новые поля для информации о заседании
+    hearing_date = Column(String)  # Дата заседания в формате DD.MM.YYYY
+    hearing_time = Column(String)  # Время заседания в формате HH:MM
+    hearing_room = Column(String)  # Номер кабинета/зала
+    # Когда было создано событие в календаре
+    hearing_created_at = Column(String)
