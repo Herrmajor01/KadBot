@@ -441,18 +441,16 @@ def sync_chronology(
                                     case_number, web_event, db_event.id)
                         else:
                             old_date = parse_date(db_event.event_date)
-                            if new_date and (
-                                not old_date or new_date > old_date
-                            ):
-                                # Проверяем, изменилась ли информация о заседании
-                                hearing_changed = (
-                                    db_event.hearing_date != web_event.get("hearing_date") or
-                                    db_event.hearing_time != web_event.get("hearing_time") or
-                                    db_event.hearing_room != web_event.get(
-                                        "hearing_room")
-                                )
-
-                                # Обновляем основную информацию
+                            hearing_changed = (
+                                db_event.hearing_date != web_event.get("hearing_date") or
+                                db_event.hearing_time != web_event.get("hearing_time") or
+                                db_event.hearing_room != web_event.get(
+                                    "hearing_room")
+                            )
+                            has_newer_event = bool(new_date and (
+                                not old_date or new_date > old_date))
+                            if has_newer_event or hearing_changed:
+                                # Обновляем основную информацию (держим БД в актуальном состоянии)
                                 db_event.event_date = web_event["event_date"]
                                 db_event.event_title = web_event["event_title"]
                                 db_event.event_author = web_event["event_author"]
@@ -492,8 +490,7 @@ def sync_chronology(
                                     case_number, web_event, db_event.id)
                             else:
                                 logging.info(
-                                    f"Без изменений для дела {case_number}"
-                                )
+                                    f"Без изменений для дела {case_number}")
                         processed_cases += 1
                         save_progress(
                             case_number, index, "parser_progress.json"
@@ -596,13 +593,14 @@ def notify_case_update(
                     hearing_datetime.strftime("%d.%m.%Y %H:%M"),
                 )
 
-                # Создаём событие в календаре CRM
+                # Создаём событие в календаре CRM (жёстко в календарь ID 49)
                 calendar_result = create_project_calendar_event(
                     project_id=project_id,
                     case_number=case_number,
                     start_dt=hearing_datetime,
                     duration_minutes=60,
                     room=event_data.get("hearing_room"),
+                    event_calendar_id=49,
                 )
 
                 if calendar_result:

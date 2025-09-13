@@ -21,3 +21,6 @@ tqdm==4.66.1
 
 # GUI automation (for document downloads)
 pyautogui==0.9.54
+
+# Web framework for API testing
+Flask==3.0.0

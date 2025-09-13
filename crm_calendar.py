@@ -141,6 +141,7 @@ def create_project_calendar_event(
     start_dt: datetime,
     duration_minutes: int = 60,
     room: Optional[str] = None,
+    event_calendar_id: Optional[int] = None,
 ) -> Optional[dict[str, object]]:
     """
     Создаёт событие календаря, связанное с проектом.
@@ -173,15 +174,15 @@ def create_project_calendar_event(
         # но может понадобиться)
         # end_dt = start_dt + timedelta(minutes=duration_minutes)
 
-        # Получаем/создаём ID календаря для судебных заседаний
-        calendar_id = _get_or_create_hearings_calendar()
+        # Получаем/создаём ID календаря для судебных заседаний, если не передан явно
+        calendar_id = event_calendar_id if event_calendar_id is not None else _get_or_create_hearings_calendar()
         if not calendar_id:
             logging.error("Не удалось получить ID календаря для события")
             return None
 
         # Создаем событие в календаре через модуль "Задачи"
         url = (
-            "https://" + COMPANY + ".aspro.cloud/api/v1/module/task/task/create"
+            "https://" + COMPANY + ".aspro.cloud/api/v1/module/task/tasks/create"
         )
 
         # Данные для создания события в календаре

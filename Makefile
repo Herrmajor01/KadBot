@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean lint format test run setup-db migrate-db
+.PHONY: help install install-dev clean lint format test run setup-db migrate-db run-calendar-api
 
 help: ## Показать справку по командам
 	@echo "Доступные команды:"
@@ -55,6 +55,9 @@ download-docs: ## Скачать документы по ссылкам из б�
 
 test-notify: ## Отправить тестовое уведомление
 	python test_notify.py
+
+run-calendar-api: ## Запустить тестовый API сервер календаря
+	python run_calendar_api.py
 
 check-all: format lint test ## Выполнить все проверки кода
 
