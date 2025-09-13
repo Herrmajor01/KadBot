@@ -61,8 +61,9 @@ def main() -> None:
     if action == "1":
         sync_crm_projects_to_db()
     elif action == "2":
-        resume = check_resume_option("parser_progress.json")
-        sync_chronology(resume=resume)
+        # Новая версия parser.py автоматически восстанавливает прогресс
+        print("Запуск парсинга с автоматическим восстановлением прогресса...")
+        sync_chronology()
     elif action == "3":
         resume = check_resume_option("download_progress.json")
         download_documents(resume=resume)

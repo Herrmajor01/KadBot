@@ -6,11 +6,11 @@
 
 import logging
 import random
-import re
 import time
 import traceback
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
+import re
 
 try:
     import undetected_chromedriver as uc  # type: ignore
@@ -105,105 +105,22 @@ def get_case_events(
                     encoding="utf-8",
                 ) as f:
                     f.write(driver.page_source)
-                return None, 0
+                return {
+                    "event_date": "",
+                    "event_title": "Доступ ограничен (подписка)",
+                    "event_author": "",
+                    "event_publish": "",
+                    "doc_link": "",
+                }, 0
 
             # Эмуляция человеческого поведения (уменьшено до 3 прокруток)
+            for _ in range(3):
+                x, y = random.randint(50, 1200), random.randint(50, 1200)
+                driver.execute_script(f"window.scrollTo({x}, {y});")
+                simulate_mouse_movement(driver)
+                time.sleep(random.uniform(0.5, 1.0))
             driver.execute_script("window.scrollTo(0, 0);")
             time.sleep(random.uniform(0.5, 1.0))
-
-            # Извлекаем блок "Следующее заседание" по HTML-структуре
-            hearing_date = ""
-            hearing_time = ""
-            hearing_room = ""
-            try:
-                # Ищем div с классом b-instanceAdditional, который содержит
-                # информацию о заседании
-                hearing_blocks = driver.find_elements(
-                    By.CSS_SELECTOR, "div.b-instanceAdditional"
-                )
-
-                for block in hearing_blocks:
-                    # Проверяем, содержит ли блок иконку календаря
-                    calendar_icons = block.find_elements(
-                        By.CSS_SELECTOR, "i.b-icons16.redCalendar"
-                    )
-
-                    if calendar_icons:
-                        # Нашли блок с информацией о заседании
-                        text_content = block.text.strip()
-                        logging.info(
-                            f"Найден блок заседания для {case_number}: "
-                            f"{text_content}"
-                        )
-
-                        # Ищем дату и время в формате DD.MM.YYYY, HH:MM
-                        date_time_match = re.search(
-                            r"(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2})",
-                            text_content
-                        )
-
-                        if date_time_match:
-                            hearing_date = date_time_match.group(1)
-                            hearing_time = date_time_match.group(2)
-
-                            # Ищем номер кабинета/зала
-                            room_match = re.search(r"к\.(\d+)", text_content)
-                            if room_match:
-                                hearing_room = room_match.group(1)
-                            else:
-                                # Ищем другие варианты обозначения зала
-                                room_match = re.search(
-                                    r"Зал[^№]*№\s*(\d+)",
-                                    text_content
-                                )
-                                if room_match:
-                                    hearing_room = room_match.group(1)
-                                else:
-                                    hearing_room = ""
-
-                            logging.info(
-                                "Найдено следующее заседание: %s %s %s",
-                                hearing_date,
-                                hearing_time,
-                                hearing_room,
-                            )
-                            break
-
-                # Если не нашли по структуре, пробуем резервный поиск по тексту
-                if not hearing_date or not hearing_time:
-                    logging.info(
-                        f"Резервный поиск по тексту для дела {case_number}"
-                    )
-                    elems = driver.find_elements(
-                        By.XPATH,
-                        "//*[contains(text(),'Следующее заседание')]",
-                    )
-                    if elems:
-                        text_source = elems[0].text.strip()
-                        m = re.search(
-                            (
-                                r"Следующее заседание:\s*(\d{2}\.\d{2}\.\d{4}),"
-                                r"\s*(\d{2}:\d{2})(?:\s*,\s*к\.(\d+))?"
-                            ),
-                            text_source,
-                        )
-                        if m:
-                            hearing_date = m.group(1)
-                            hearing_time = m.group(2)
-                            hearing_room = m.group(3) if m.group(3) else ""
-                            logging.info(
-                                "Найдено следующее заседание (резервный поиск): "
-                                "%s %s %s",
-                                hearing_date,
-                                hearing_time,
-                                hearing_room,
-                            )
-            except Exception as e:
-                logging.info(
-                    "Не удалось извлечь 'Следующее заседание' для %s: %s",
-                    case_number,
-                    e,
-                )
 
             # Переключение на вкладку "Судебные акты"
             try:
@@ -302,6 +219,54 @@ def get_case_events(
             if doc_links:
                 doc_link = doc_links[0].get_attribute("href")
 
+            # Извлекаем блок "Следующее заседание: DD.MM.YYYY, HH:MM , к.NNN"
+            hearing_date = ""
+            hearing_time = ""
+            hearing_room = ""
+            try:
+                # По иконке красного календаря
+                red_icons = driver.find_elements(
+                    By.CSS_SELECTOR, "i.b-icons16.redCalendar"
+                )
+                text_source = ""
+                if red_icons:
+                    # Берём ближайший родитель с текстом
+                    container = red_icons[0].find_element(By.XPATH, "./..")
+                    text_source = container.text.strip()
+                if not text_source:
+                    # Резервный поиск по тексту
+                    elems = driver.find_elements(
+                        By.XPATH,
+                        "//*[contains(text(),'Следующее заседание')]",
+                    )
+                    if elems:
+                        text_source = elems[0].text.strip()
+
+                if text_source:
+                    m = re.search(
+                        (
+                            r"Следующее заседание:\s*(\d{2}\.\d{2}\.\d{4}),"
+                            r"\s*(\d{2}:\d{2})(?:\s*,\s*к\.(\d+))?"
+                        ),
+                        text_source,
+                    )
+                    if m:
+                        hearing_date = m.group(1)
+                        hearing_time = m.group(2)
+                        hearing_room = m.group(3) if m.group(3) else ""
+                        logging.info(
+                            "Найдено следующее заседание: %s %s %s",
+                            hearing_date,
+                            hearing_time,
+                            hearing_room,
+                        )
+            except Exception as e:
+                logging.info(
+                    "Не удалось извлечь 'Следующее заседание' для %s: %s",
+                    case_number,
+                    e,
+                )
+
             event_data = {
                 "event_date": safe_sel(last_event, ".case-date"),
                 "event_title": safe_sel(last_event, ".case-type"),
@@ -317,66 +282,75 @@ def get_case_events(
             }
             logging.info(
                 f"Спарсено событие для дела {case_number}: "
-                f"{event_data['event_title']} — {event_data['event_date']}"
+                f"{event_data['event_date']}, {event_data['event_title']}"
             )
             return event_data, events_count
-
-        except Exception as e:
+        except WebDriverException as e:
             logging.error(
-                f"Ошибка при парсинге дела {case_number} (попытка {attempt + 1}): {e}"
+                f"Ошибка парсинга дела {case_number} "
+                f"(попытка {attempt + 1}/3): {str(e)}"
             )
+            logging.error(f"Stacktrace: {traceback.format_exc()}")
+            with open(
+                f"error_{case_number.replace('/', '_')}.html",
+                "w",
+                encoding="utf-8",
+            ) as f:
+                f.write(driver.page_source)
             if attempt < 2:
-                time.sleep(random.uniform(2.0, 5.0))
-                continue
+                driver.refresh()
+                time.sleep(random.uniform(3.0, 5.0))
             else:
                 logging.error(
-                    f"Не удалось спарсить дело {case_number} после 3 попыток"
+                    f"Не удалось получить события для дела {case_number} "
+                    f"после 3 попыток"
                 )
                 return None, 0
-
     return None, 0
 
 
 def sync_chronology(
-    start_index: int = 0,
-    batch_size: int = 10,
-    pause_between_batches: int = 5,
+    batch_size: int = 50,
+    pause_between_batches: int = 120,
+    resume: bool = False,
 ) -> None:
     """
-    Синхронизирует хронологию дел с сайта kad.arbitr.ru.
+    Синхронизирует хронологию дел с сайта kad.arbitr.ru с базой данных.
+
+    Обрабатывает дела пакетами, получает последние события и обновляет
+    базу данных. При обнаружении новых событий отправляет уведомления в CRM.
+    Поддерживает возобновление с последнего обработанного дела.
 
     Args:
-        start_index: Начальный индекс для обработки
-        batch_size: Размер пакета для обработки
+        batch_size: Размер пакета дел для обработки
         pause_between_batches: Пауза между пакетами в секундах
+        resume: Если True, возобновляет парсинг с последнего обработанного дела
     """
     session = Session()
-    driver = None
+    driver = get_driver()
     processed_cases = 0
+    start_index = 0
 
     try:
-        # Загружаем прогресс
-        progress = load_progress("parser_progress.json")
-        if progress:
-            start_index = progress.get("index", start_index)
-            logging.info(f"Восстановлен прогресс с индекса {start_index}")
-
-        # Получаем список дел
         cases = session.query(Cases).all()
-        if not cases:
-            logging.warning("Не найдено дел для обработки")
-            return
-
         logging.info(f"Найдено {len(cases)} дел для обработки")
-        if start_index >= len(cases):
-            logging.info("Все дела уже обработаны")
-            return
 
-        # Инициализируем драйвер
-        driver = get_driver()
-        if not driver:
-            logging.error("Не удалось инициализировать Chrome драйвер")
-            return
+        if resume:
+            progress = load_progress("parser_progress.json")
+            if progress:
+                last_case_number = progress.get("last_case_number")
+                start_index = progress.get("last_index", 0)
+                logging.info(
+                    f"Возобновление с дела {last_case_number} "
+                    f"(индекс {start_index})"
+                )
+                cases = cases[start_index:]
+            else:
+                logging.info("Файл прогресса не найден, начинаем с начала")
+                start_index = 0
+                cases = cases
+        else:
+            clear_progress("parser_progress.json")
 
         with tqdm(total=len(cases), desc="Обработка дел", unit="дело") as pbar:
             for i in range(0, len(cases), batch_size):
@@ -408,89 +382,50 @@ def sync_chronology(
 
                         new_date = parse_date(web_event["event_date"])
                         if not db_event:
-                            # Новое событие - добавляем в БД
-                            new_chronology = Chronology(
-                                case_number=case_number,
-                                event_date=web_event["event_date"],
-                                event_title=web_event["event_title"],
-                                event_author=web_event["event_author"],
-                                event_publish=web_event["event_publish"],
-                                events_count=events_count,
-                                doc_link=web_event["doc_link"],
-                                hearing_date=web_event.get("hearing_date"),
-                                hearing_time=web_event.get("hearing_time"),
-                                hearing_room=web_event.get("hearing_room"),
-                                hearing_created_at=None,
+                            session.add(
+                                Chronology(
+                                    case_number=case_number,
+                                    event_date=web_event["event_date"],
+                                    event_title=web_event["event_title"],
+                                    event_author=web_event["event_author"],
+                                    event_publish=web_event["event_publish"],
+                                    events_count=events_count,
+                                    doc_link=web_event["doc_link"],
+                                )
                             )
-                            session.add(new_chronology)
                             session.commit()
-
-                            # Получаем ID добавленной записи
-                            db_event = new_chronology
-
                             logging.info(
                                 "Добавлено новое событие для дела "
                                 f"{case_number}: {web_event['event_title']} — "
                                 f"{web_event['event_date']}"
                             )
-
-                            # Если есть информация о заседании, создаём событие в календаре
-                            if (web_event.get("hearing_date") and
-                                    web_event.get("hearing_time")):
-                                notify_case_update(
-                                    case_number, web_event, db_event.id)
                         else:
                             old_date = parse_date(db_event.event_date)
-                            hearing_changed = (
-                                db_event.hearing_date != web_event.get("hearing_date") or
-                                db_event.hearing_time != web_event.get("hearing_time") or
-                                db_event.hearing_room != web_event.get(
-                                    "hearing_room")
-                            )
-                            has_newer_event = bool(new_date and (
-                                not old_date or new_date > old_date))
-                            if has_newer_event or hearing_changed:
-                                # Обновляем основную информацию (держим БД в актуальном состоянии)
+                            if new_date and (
+                                not old_date or new_date > old_date
+                            ):
                                 db_event.event_date = web_event["event_date"]
                                 db_event.event_title = web_event["event_title"]
-                                db_event.event_author = web_event["event_author"]
-                                db_event.event_publish = web_event["event_publish"]
+                                db_event.event_author = web_event[
+                                    "event_author"
+                                ]
+                                db_event.event_publish = web_event[
+                                    "event_publish"
+                                ]
                                 db_event.events_count = events_count
                                 db_event.doc_link = web_event["doc_link"]
-
-                                # Обновляем информацию о заседании
-                                db_event.hearing_date = web_event.get(
-                                    "hearing_date")
-                                db_event.hearing_time = web_event.get(
-                                    "hearing_time")
-                                db_event.hearing_room = web_event.get(
-                                    "hearing_room")
-
-                                # Если изменилась информация о заседании, сбрасываем флаг создания
-                                if hearing_changed:
-                                    db_event.hearing_created_at = None
-
                                 session.commit()
-
                                 logging.info(
                                     "Обновлено событие для дела "
                                     f"{case_number}: "
                                     f"{web_event['event_title']} — "
                                     f"{web_event['event_date']}"
                                 )
-
-                                if hearing_changed:
-                                    logging.info(
-                                        "Обнаружены изменения в информации о заседании "
-                                        f"для дела {case_number}"
-                                    )
-
-                                # Отправляем уведомление и создаём событие в календаре
-                                notify_case_update(
-                                    case_number, web_event, db_event.id)
+                                notify_case_update(case_number, web_event)
                             else:
                                 logging.info(
-                                    f"Без изменений для дела {case_number}")
+                                    f"Без изменений для дела {case_number}"
+                                )
                         processed_cases += 1
                         save_progress(
                             case_number, index, "parser_progress.json"
@@ -524,26 +459,19 @@ def sync_chronology(
         logging.info("Сессия базы данных закрыта")
 
 
-def notify_case_update(
-    case_number: str,
-    event_data: Dict[str, Any],
-    chronology_id: int
-) -> None:
+def notify_case_update(case_number: str, event_data: Dict[str, Any]) -> None:
     """
-    Отправляет уведомление об обновлении дела в CRM и создаёт событие в календаре.
+    Отправляет уведомление об обновлении дела в CRM.
 
     Args:
         case_number: Номер дела
         event_data: Данные события для уведомления
-        chronology_id: ID записи в таблице Chronology
     """
     project_id = get_project_id_for_case(case_number)
     if not project_id:
         logging.warning(f"Не найден project_id для дела {case_number}")
         return
-
     try:
-        # Отправляем комментарий в CRM
         send_case_update_comment(
             project_id=project_id,
             event_title=event_data.get("event_title", "Без названия"),
@@ -554,24 +482,12 @@ def notify_case_update(
             f"Комментарий успешно отправлен в CRM для дела {case_number}"
         )
 
-        # Проверяем, нужно ли создать событие в календаре
+        # Если есть информация о следующем заседании, создаём событие в календаре
         hearing_date = event_data.get("hearing_date")
         hearing_time = event_data.get("hearing_time")
+        hearing_room = event_data.get("hearing_room")
 
         if hearing_date and hearing_time:
-            # Проверяем, не было ли уже создано событие для этого заседания
-            session = Session()
-            try:
-                db_event = session.query(Chronology).get(chronology_id)
-                if db_event and db_event.hearing_created_at:
-                    logging.info(
-                        f"Событие в календаре уже создано для дела {case_number} "
-                        f"в {db_event.hearing_created_at}"
-                    )
-                    return
-            finally:
-                session.close()
-
             try:
                 logging.info(
                     "Найдена информация о заседании для дела %s: "
@@ -579,7 +495,7 @@ def notify_case_update(
                     case_number,
                     hearing_date,
                     hearing_time,
-                    event_data.get("hearing_room") or "не указан",
+                    hearing_room or "не указан",
                 )
 
                 # Парсим дату и время
@@ -593,33 +509,16 @@ def notify_case_update(
                     hearing_datetime.strftime("%d.%m.%Y %H:%M"),
                 )
 
-                # Создаём событие в календаре CRM (жёстко в календарь ID 49)
+                # Создаём событие в календаре CRM
                 calendar_result = create_project_calendar_event(
                     project_id=project_id,
                     case_number=case_number,
                     start_dt=hearing_datetime,
                     duration_minutes=60,
-                    room=event_data.get("hearing_room"),
-                    event_calendar_id=49,
+                    room=hearing_room,
                 )
 
                 if calendar_result:
-                    # Обновляем флаг создания события в БД
-                    session = Session()
-                    try:
-                        db_event = session.query(Chronology).get(chronology_id)
-                        if db_event:
-                            db_event.hearing_created_at = datetime.now().strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            session.commit()
-                            logging.info(
-                                "Обновлён флаг создания события в календаре "
-                                f"для дела {case_number}"
-                            )
-                    finally:
-                        session.close()
-
                     logging.info(
                         "Событие календаря успешно создано для дела %s. "
                         "Результат: %s",
@@ -649,7 +548,3 @@ def notify_case_update(
         logging.error(
             f"Ошибка отправки комментария в CRM для дела {case_number}: {e}"
         )
-
-
-if __name__ == "__main__":
-    sync_chronology()
