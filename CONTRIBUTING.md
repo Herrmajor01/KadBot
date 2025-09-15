@@ -73,13 +73,13 @@ git checkout -b fix/your-bug-fix
 
 ```bash
 # Запуск всех тестов
-make test
+pytest -q
 
-# Проверка стиля кода
-make check-all
+# С покрытием
+pytest --cov=. --cov-report=term-missing
 
 # Запуск конкретного теста
-pytest tests/test_parser.py::test_get_case_events
+pytest tests/test_crm_sync.py::test_extract_case_number_cyrillic
 ```
 
 #### Создание Pull Request
@@ -120,17 +120,14 @@ make lint
 
 ```python
 # Стандартная библиотека
-import os
-import sys
 from typing import Optional, List, Dict
 
 # Сторонние библиотеки
 import requests
-from sqlalchemy import create_engine
 
 # Локальные модули
-from models import Cases
-from utils import get_driver
+from kadbot.db.models import Cases
+from kadbot.utils import get_driver
 ```
 
 ### Документация
@@ -180,32 +177,36 @@ def test_get_case_events():
 
 ```
 KadBot/
-├── main.py              # Главное меню
-├── parser.py            # Парсинг kad.arbitr.ru
-├── download_documents.py # Скачивание документов
-├── crm_sync.py          # Синхронизация с CRM
-├── crm_notify.py        # Уведомления в CRM
-├── db.py                # Работа с БД
-├── models.py            # SQLAlchemy модели
-├── logic.py             # Бизнес-логика
-├── utils.py             # Утилиты
-├── init_db.py           # Инициализация БД
-├── migrate_db.py        # Миграции БД
-├── test_notify.py       # Тестирование уведомлений
-├── tests/               # Тесты
-├── documents/           # Скачанные документы
-├── requirements.txt     # Зависимости
-├── requirements-dev.txt # Зависимости для разработки
-├── setup.cfg            # Конфигурация инструментов
-├── pyproject.toml       # Метаданные проекта
-├── Makefile             # Команды для разработки
-├── README.md            # Основная документация
-├── API.md               # Документация API
-├── DEPLOYMENT.md        # Инструкции по развертыванию
-├── CONTRIBUTING.md      # Это руководство
-├── CHANGELOG.md         # История изменений
-├── LICENSE              # Лицензия
-└── env.example          # Пример переменных окружения
+├── main.py                # Интерактивное меню
+├── kadbot/
+│   ├── cli.py             # CLI-команды: sync/parse/download/health
+│   ├── config.py          # Конфигурация из .env
+│   ├── utils.py           # Драйвер Chrome, прогресс
+│   ├── kad/
+│   │   └── parser.py      # Парсер kad.arbitr.ru
+│   ├── services/
+│   │   └── documents.py   # Скачивание документов + OCR
+│   ├── crm/
+│   │   ├── client.py      # HTTP‑клиент Aspro
+│   │   ├── sync.py        # Синхронизация проектов в БД
+│   │   ├── notify.py      # Комментарии‑уведомления
+│   │   └── calendar.py    # События календаря
+│   └── db/
+│       ├── models.py      # Модели SQLAlchemy
+│       ├── session.py     # Подключение/Session
+│       ├── init_db.py     # Инициализация БД
+│       └── migrate.py     # Миграции БД
+├── tests/                 # Тесты
+├── documents/             # Скачанные документы (локально)
+├── requirements.txt       # Зависимости
+├── requirements-dev.txt   # Зависимости для разработки
+├── README.md              # Основная документация
+├── API.md                 # Документация API
+├── DEPLOYMENT.md          # Развертывание
+├── DEPLOYMENT_CALENDAR.md # Календарь CRM
+├── CHANGES_SUMMARY.md     # Сводка изменений
+├── LICENSE                # Лицензия
+└── env.example            # Пример .env
 ```
 
 ## Процесс ревью

@@ -6,10 +6,17 @@
 
 import json
 import os
-from parser import sync_chronology  # type: ignore
 
-from crm_sync import sync_crm_projects_to_db
-from download_documents import download_documents
+# Настраиваем логирование до импортов остальных модулей
+from kadbot.config import get_config  # noqa: E402
+from kadbot.logging_config import configure_logging  # noqa: E402
+
+cfg = get_config()
+configure_logging(cfg.log_level, logfile="kad_parser.log")
+
+from kadbot.kad.parser import sync_chronology  # type: ignore  # noqa: E402
+from kadbot.crm.sync import sync_crm_projects_to_db  # noqa: E402
+from kadbot.services.documents import download_documents  # noqa: E402
 
 
 def check_resume_option(filename: str) -> bool:

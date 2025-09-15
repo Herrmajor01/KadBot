@@ -72,7 +72,7 @@ nano .env
 
 ### 10. Инициализация базы данных
 ```bash
-python init_db.py
+python -m kadbot.db.init_db
 ```
 
 ## Установка на macOS
@@ -112,7 +112,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 cp .env.example .env
 nano .env
-python init_db.py
+python -m kadbot.db.init_db
 ```
 
 ## Установка на Windows
@@ -138,7 +138,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 copy .env.example .env
 notepad .env
-python init_db.py
+python -m kadbot.db.init_db
 ```
 
 ## Настройка переменных окружения
@@ -154,9 +154,13 @@ ASPRO_COMPANY=название_вашей_компании
 USERID=id_пользователя_в_crm
 USER_NAME=Имя_Пользователя
 
-# Настройки путей (опционально)
+# Опционально
+ASPRO_EVENT_CALENDAR_ID=49
+DATABASE_URL=sqlite:///kad_cases.db
 DOCUMENTS_DIR=/path/to/documents
 LOG_LEVEL=INFO
+BROWSER_TIMEOUT=30
+BROWSER_RETRIES=3
 ```
 
 ### Получение API ключа Aspro.Cloud
@@ -177,13 +181,10 @@ LOG_LEVEL=INFO
 ### 1. Тест Chrome драйвера
 ```bash
 python -c "
-from utils import get_driver
+from kadbot.utils import get_driver
 driver = get_driver()
-if driver:
-    print('Chrome драйвер работает корректно')
-    driver.quit()
-else:
-    print('Ошибка инициализации Chrome драйвера')
+print('OK' if driver else 'FAIL')
+driver and driver.quit()
 "
 ```
 
@@ -194,7 +195,7 @@ tesseract --version
 
 ### 3. Тест подключения к CRM
 ```bash
-python test_notify.py
+python -m kadbot.cli health
 ```
 
 ### 4. Запуск основного приложения
@@ -219,6 +220,8 @@ User=your_username
 WorkingDirectory=/path/to/KadBot
 Environment=PATH=/path/to/KadBot/venv/bin
 ExecStart=/path/to/KadBot/venv/bin/python main.py
+; Альтернатива (без интерактива):
+; ExecStart=/path/to/KadBot/venv/bin/python -m kadbot.cli parse --batch-size 10 --pause-between-batches 5
 Restart=always
 RestartSec=10
 
@@ -238,11 +241,14 @@ sudo systemctl start kadbot
 Добавьте в crontab (`crontab -e`):
 
 ```bash
-# Запуск парсинга каждый час
-0 * * * * cd /path/to/KadBot && /path/to/KadBot/venv/bin/python -c "from parser import sync_chronology; sync_chronology()"
+# Синхронизация CRM — раз в сутки
+0 3 * * * cd /path/to/KadBot && /path/to/KadBot/venv/bin/python -m kadbot.cli sync >> kad_cron.log 2>&1
 
-# Скачивание документов каждые 6 часов
-0 */6 * * * cd /path/to/KadBot && /path/to/KadBot/venv/bin/python -c "from download_documents import download_documents; download_documents()"
+# Парсинг дел — каждый час
+0 * * * * cd /path/to/KadBot && /path/to/KadBot/venv/bin/python -m kadbot.cli parse --batch-size 10 --pause-between-batches 5 >> kad_cron.log 2>&1
+
+# Скачивание документов — каждые 6 часов
+0 */6 * * * cd /path/to/KadBot && /path/to/KadBot/venv/bin/python -m kadbot.cli download --batch-size 10 --pause-between-batches 30 --resume >> kad_cron.log 2>&1
 ```
 
 ## Мониторинг и логирование
@@ -307,7 +313,7 @@ cd /path/to/KadBot
 git pull origin main
 source venv/bin/activate
 pip install -r requirements.txt
-python migrate_db.py
+python -m kadbot.db.migrate
 ```
 
 ### Обновление зависимостей

@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean lint format test run setup-db migrate-db run-calendar-api
+.PHONY: help install install-dev clean lint format test run cli setup-db migrate-db sync-crm parse-cases download-docs check-all dev-setup
 
 help: ## Показать справку по командам
 	@echo "Доступные команды:"
@@ -25,12 +25,12 @@ clean: ## Очистить временные файлы
 	rm -rf .coverage
 
 lint: ## Проверить код с помощью линтеров
-	flake8 *.py --max-line-length=79 --extend-ignore=F401
-	pylint *.py --disable=C0114,C0116
+	flake8 kadbot *.py tests --max-line-length=79 --extend-ignore=F401
+	pylint kadbot *.py --recursive=y --disable=C0114,C0116
 
 format: ## Отформатировать код
-	black *.py --line-length=79
-	isort *.py --profile=black
+	black kadbot *.py --line-length=79
+	isort kadbot *.py --profile=black
 
 test: ## Запустить тесты
 	pytest tests/ -v --cov=. --cov-report=html
@@ -38,26 +38,25 @@ test: ## Запустить тесты
 run: ## Запустить основное приложение
 	python main.py
 
+cli: ## Показать справку CLI (kadbot)
+	python -m kadbot.cli -h
+
 setup-db: ## Инициализировать базу данных
-	python init_db.py
+	python -m kadbot.db.init_db
 
 migrate-db: ## Выполнить миграцию базы данных
-	python migrate_db.py
+	python -m kadbot.db.migrate
 
-sync-crm: ## Синхронизировать проекты из CRM
-	python -c "from crm_sync import sync_crm_projects_to_db; sync_crm_projects_to_db()"
+sync-crm: ## Синхронизировать проекты из CRM (CLI)
+	python -m kadbot.cli sync
 
-parse-cases: ## Запустить парсинг дел
-	python -c "from parser import sync_chronology; sync_chronology()"
+parse-cases: ## Запустить парсинг дел (CLI)
+	python -m kadbot.cli parse
 
-download-docs: ## Скачать документы по ссылкам из базы данных
-	python -c "from download_documents import download_documents; download_documents()"
+download-docs: ## Скачать документы и выполнить OCR (CLI)
+	python -m kadbot.cli download --resume
 
-test-notify: ## Отправить тестовое уведомление
-	python test_notify.py
-
-run-calendar-api: ## Запустить тестовый API сервер календаря
-	python run_calendar_api.py
+# Устаревшие цели удалены: test-notify, run-calendar-api
 
 check-all: format lint test ## Выполнить все проверки кода
 
